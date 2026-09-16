@@ -1,0 +1,54 @@
+root@bbaa2fda9a47:/# nvidia-smi topo -m
+	GPU0	NIC0	NIC1	NIC2	CPU Affinity	NUMA Affinity	GPU NUMA ID
+GPU0	 X 	SYS	SYS	NODE	0-31,64-95	0		N/A
+NIC0	SYS	 X 	PIX	SYS				
+NIC1	SYS	PIX	 X 	SYS				
+NIC2	NODE	SYS	SYS	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_2
+  NIC1: mlx5_3
+  NIC2: mlx5_bond_0
+
+  root@bbaa2fda9a47:/# ls -l /sys/class/infiniband_verbs 2>/dev/null
+total 0
+-r--r--r-- 1 nobody nogroup 4096 Sep 16 19:58 abi_version
+lrwxrwxrwx 1 nobody nogroup    0 Sep 16 19:58 uverbs0 -> ../../devices/pci0000:20/0000:20:01.3/0000:23:00.0/infiniband_verbs/uverbs0
+lrwxrwxrwx 1 nobody nogroup    0 Sep 16 19:58 uverbs2 -> ../../devices/pci0000:c0/0000:c0:03.1/0000:c2:00.0/infiniband_verbs/uverbs2
+lrwxrwxrwx 1 nobody nogroup    0 Sep 16 19:58 uverbs3 -> ../../devices/pci0000:c0/0000:c0:03.1/0000:c2:00.1/infiniband_verbs/uverbs3
+root@bbaa2fda9a47:/# for device in /sys/class/infiniband_verbs/uverbs*; do
+    printf "%s: " "$(basename "$device")"
+    cat "$device/dev"
+done
+uverbs0: 231:192
+uverbs2: 231:194
+uverbs3: 231:195
+root@bbaa2fda9a47:/# for device in /sys/class/infiniband/mlx5_*; do
+    echo "=== $(basename "$device") ==="
+    cat "$device"/ports/*/state
+    cat "$device"/ports/*/phys_state
+    cat "$device"/ports/*/link_layer
+done
+=== mlx5_2 ===
+1: DOWN
+3: Disabled
+Ethernet
+=== mlx5_3 ===
+1: DOWN
+3: Disabled
+Ethernet
+=== mlx5_bond_0 ===
+4: ACTIVE
+5: LinkUp
+Ethernet
